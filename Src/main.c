@@ -373,6 +373,22 @@ int main(void)
 	
 	uint16_t page=0; uint16_t offset=0; uint32_t razmer=0; uint32_t temp=0;
 	
+		/*-------------------------НАЧИНАЕМ ЗАПИСЬ МАССИВОВ КАРТИНОК  -----------------------------
+	---------------------------------------    ВО ВНЕШНЮЮ ПАМЯТЬ ------------------------------
+	------32768 ЭЛЕМЕНТОВ МАКСИМУМ ЗА РАЗ ЗАПИСАТЬ ПОЛУЧИТСЯ------------------ ---------------- 
+	наш массив под картинку содержит 320*240*2 = 153600 элементов, нужно 4 полных блока 
+	                              и еще 22528 элемента сверху       ---------------------- */
+																
+		
+		
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);//оранжевый загорается
+		DelayMicro(500000);
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);// внимание,сейчас начнется процесс записи
+		DelayMicro(500000);
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
+		DelayMicro(500000);
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
+	/*
 	while(1)
 	{
 		AT45_ReadMainMemoryPage( page, offset);
@@ -380,20 +396,87 @@ int main(void)
 		
 		if (buff[0]==preview_page[0])
 		{
-			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET); // орнжевый вкл
 		}
 	}
+	*/
+	
+	//int maxBlock=32768;
 	
 	
+	//int maxBuff=32768;
+	//uint8_t picture[32768]={0}; //фрагмент картинки, который мы запишем в память
+	//int blockNumber = 0;
+	
+	LoadFlash(preview_page, 0, sizeof(preview_page), 1);
+	
+	/*
+		for (uint16_t indexElemInArr = 0; indexElemInArr< maxBuff; indexElemInArr++)
+		{
+			//picture[indexElemInArr] = preview_page[ maxBuff*blockNumber+indexElemInArr];
+			LoadFlash(&preview_page[ maxBuff*blockNumber+indexElemInArr], 0,  1, 1);  //записал побайтово
+		}
+		//LoadFlash(picture, 0,  sizeof(picture), 1); // Записал первый блок
+		*/
+		
+
+		
+		
+		
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET); // зеленый вкл
+		DelayMicro(1000000);
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET); 
+		
+	/*-------------------------НАЧИНАЕМ СЧИТЫВАНИЕ МАССИВОВ КАРТИНОК  -----------------------------
+	---------------------------------------    С ВНЕШНЕЙ ПАМЯТИ ------------------------------*/	
+		
+		
+		AT45_ReadMainMemoryPage( page, offset);
+		int i=0;
+		
+		TFT9341_SetAddrWindow(0, 0, 320, 240);
+		DC_DATA();
+		CS_ACTIVE();
+		
+	while(i<32768)
+	{
+		
+		
+		HAL_SPI_Receive(&hspi2, &byte, 1, 10);
+		
+		HAL_SPI_Transmit(&hspi1, &byte, 1, 10);	
+					
+
+		i++;
+		
+	}
+	CS_IDLE();
+		
+		
+		/*
+		uint8_t picture1[maxBuff];
+		//AT45_ReadMainMemoryPage( page, offset);
+		for(uint16_t i=0;i<20000;i++)
+		{
+			AT45_ReadMainMemoryPage( page, offset); //может не туда поставил
+			HAL_SPI_Receive(&hspi2, &byte, 1, 100);	picture1[i] = byte;
+		}
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET); // зеленый вкл
+		
+		HAL_GPIO_WritePin(GPIOD, FLASH_CS_Pin, GPIO_PIN_SET);
+		
+		ILI9341_Draw_Image((unsigned char*)picture1);
+		CS_ACTIVE();
+		*/
 	
 	
-	ILI9341_Draw_Image((const char*)preview_page);
+	//ILI9341_Draw_Image((const char*)preview_page);
 	
 	
 	
 	//HAL_ADCEx_Calibration_Start(&hadc1);
 	
-	TubeStateControlCheck();
+	//TubeStateControlCheck();
 	
 	 
 	
